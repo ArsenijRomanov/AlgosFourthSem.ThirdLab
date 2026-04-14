@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trees.Core", "Trees.Core\Trees.Core.csproj", "{A9531F58-2692-4BAD-B4F4-14D956C7CDCB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9531F58-2692-4BAD-B4F4-14D956C7CDCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9531F58-2692-4BAD-B4F4-14D956C7CDCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9531F58-2692-4BAD-B4F4-14D956C7CDCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9531F58-2692-4BAD-B4F4-14D956C7CDCB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
