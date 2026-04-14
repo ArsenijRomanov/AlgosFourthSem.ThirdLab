@@ -7,6 +7,7 @@ public class MorrisSolver : ISolver
 {
     public BigInteger Solve(Node root)
     {
+        ArgumentNullException.ThrowIfNull(root);
         throw new NotImplementedException();
     }
 }

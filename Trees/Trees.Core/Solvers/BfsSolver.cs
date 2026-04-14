@@ -10,7 +10,7 @@ public class BfsSolver : ISolver
         ArgumentNullException.ThrowIfNull(root);
 
         var queue = new Queue<(Node node, BigInteger sum)>();
-        queue.Enqueue((root, 0));
+        queue.Enqueue((root, BigInteger.Zero));
 
         var sum = BigInteger.Zero;
 
@@ -18,14 +18,14 @@ public class BfsSolver : ISolver
         {
             var cur = queue.Dequeue();
 
-            if (cur.node is { Left: null, Right: null })
-                sum += cur.sum + cur.node.Value;
-            
-            if (cur.node.Left != null)
-                queue.Enqueue((cur.node.Left, cur.sum * 10 + cur.node.Value));
-            
-            if (cur.node.Right != null)
-                queue.Enqueue((cur.node.Right, cur.sum * 10 + cur.node.Value));
+            if (cur.node is { LeftEdge: null, RightEdge: null })
+                sum += cur.sum;
+
+            if (cur.node.LeftEdge != null)
+                queue.Enqueue((cur.node.LeftEdge.To, cur.sum * 10 + cur.node.LeftEdge.Value));
+
+            if (cur.node.RightEdge != null)
+                queue.Enqueue((cur.node.RightEdge.To, cur.sum * 10 + cur.node.RightEdge.Value));
         }
 
         return sum;

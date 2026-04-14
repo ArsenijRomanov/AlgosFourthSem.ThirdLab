@@ -8,23 +8,21 @@ public class RecursiveDfsSolver : ISolver
     public BigInteger Solve(Node root)
     {
         ArgumentNullException.ThrowIfNull(root);
-        return Dfs(root, 0);
+        return Dfs(root, BigInteger.Zero);
     }
 
     private static BigInteger Dfs(Node curNode, BigInteger curSum)
     {
-        var nextSum = curSum * 10;
-        
-        if (curNode.Left == null && curNode.Right == null)
-            return nextSum + curNode.Value;
-        
-        BigInteger sum = 0;
-        
-        if (curNode.Left != null)
-            sum += Dfs(curNode.Left, nextSum + curNode.Value);
-        
-        if (curNode.Right != null)
-            sum += Dfs(curNode.Right, nextSum + curNode.Value);
+        if (curNode.LeftEdge == null && curNode.RightEdge == null)
+            return curSum;
+
+        var sum = BigInteger.Zero;
+
+        if (curNode.LeftEdge != null)
+            sum += Dfs(curNode.LeftEdge.To, curSum * 10 + curNode.LeftEdge.Value);
+
+        if (curNode.RightEdge != null)
+            sum += Dfs(curNode.RightEdge.To, curSum * 10 + curNode.RightEdge.Value);
 
         return sum;
     }
