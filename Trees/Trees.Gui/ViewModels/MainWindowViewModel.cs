@@ -44,12 +44,12 @@ public sealed class MainWindowViewModel : ObservableObject
         RunSelectedAlgorithmCommand = new RelayCommand(RunSelectedAlgorithm, () => ActiveRunRoot is not null);
         RunAllAlgorithmsCommand = new RelayCommand(RunAllAlgorithms, () => ActiveRunRoot is not null);
         ClearResultsCommand = new RelayCommand(ClearResults, () => Results.Count > 0);
+        ClearAlgorithmCacheCommand = new RelayCommand(ClearAlgorithmCache, () => IsCacheAlgorithmSelected);
     }
 
-    public Array AvailableAlgorithms { get; }
-    public Array AvailableShapes { get; }
+    public IReadOnlyList<AlgorithmOption> AvailableAlgorithms { get; }
+    public IReadOnlyList<TreeShapeOption> AvailableShapes { get; }
     public IReadOnlyList<int> Digits { get; }
-
     public ObservableCollection<RunMeasurement> Results { get; }
 
     public RelayCommand CreateRootCommand { get; }
@@ -60,6 +60,7 @@ public sealed class MainWindowViewModel : ObservableObject
     public RelayCommand RunSelectedAlgorithmCommand { get; }
     public RelayCommand RunAllAlgorithmsCommand { get; }
     public RelayCommand ClearResultsCommand { get; }
+    public RelayCommand ClearAlgorithmCacheCommand { get; }
 
     public EditableTreeNode? Root => _document.Root;
 
@@ -81,16 +82,27 @@ public sealed class MainWindowViewModel : ObservableObject
         }
     }
 
-    public EditableTreeNode? SelectedNode => Root is null || SelectedNodeId is null
-        ? null
-        : _editorService.FindById(Root, SelectedNodeId.Value);
+    public EditableTreeNode? SelectedNode
+        => Root is null || SelectedNodeId is null
+            ? null
+            : _editorService.FindById(Root, SelectedNodeId.Value);
 
-    public EditableTreeNode? ActiveRunRoot => RunFromSelectedNode ? SelectedNode ?? Root : Root;
+    public EditableTreeNode? ActiveRunRoot
+        => RunFromSelectedNode
+            ? SelectedNode ?? Root
+            : Root;
 
     public AlgorithmOption SelectedAlgorithm
     {
         get => _selectedAlgorithm;
-        set => SetProperty(ref _selectedAlgorithm, value);
+        set
+        {
+            if (!SetProperty(ref _selectedAlgorithm, value))
+                return;
+
+            OnPropertyChanged(nameof(IsCacheAlgorithmSelected));
+            RaiseCommandStates();
+        }
     }
 
     public TreeShapeOption SelectedShape
@@ -163,14 +175,16 @@ public sealed class MainWindowViewModel : ObservableObject
         set => SetProperty(ref _statusMessage, value);
     }
 
-    public string SelectedNodeTitle => SelectedNode is null ? "Вершина не выбрана" : $"Вершина #{SelectedNode.Id}";
+    public bool IsCacheAlgorithmSelected => SelectedAlgorithm == AlgorithmOption.CacheDfs;
+
+    public string SelectedNodeTitle
+        => SelectedNode is null
+            ? "Вершина не выбрана"
+            : $"Вершина #{SelectedNode.Id}";
 
     public bool HasTree => Root is not null;
-
     public bool HasSelection => SelectedNode is not null;
-
     public bool HasLeftChild => SelectedNode?.Left is not null;
-
     public bool HasRightChild => SelectedNode?.Right is not null;
 
     public string ActiveScopeTitle
@@ -197,6 +211,7 @@ public sealed class MainWindowViewModel : ObservableObject
             var nodes = _editorService.Traverse(Root).ToList();
             var leafCount = nodes.Count(x => x.IsLeaf);
             var height = GetHeight(Root);
+
             return $"Вершин: {nodes.Count} · Листьев: {leafCount} · Высота: {height}";
         }
     }
@@ -204,6 +219,7 @@ public sealed class MainWindowViewModel : ObservableObject
     public void ImportJson(string json)
     {
         _document = _jsonSerializer.Deserialize(json);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = _document.Root?.Id;
         Results.Clear();
         RefreshWholeState();
@@ -216,6 +232,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private void CreateRoot()
     {
         var root = _editorService.EnsureRoot(_document);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = root.Id;
         Results.Clear();
         TouchTree("Создан корень дерева.");
@@ -223,8 +240,9 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private void GenerateTree()
     {
-        GeneratedSize = Math.Clamp(GeneratedSize, 1, 1000);
+        GeneratedSize = Math.Clamp(GeneratedSize, 1, 1_000_000_000);
         _document = _documentFactory.CreateGenerated(SelectedShape, GeneratedSize, Seed);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = _document.Root?.Id;
         Results.Clear();
         RefreshWholeState();
@@ -238,6 +256,7 @@ public sealed class MainWindowViewModel : ObservableObject
             return;
 
         var child = _editorService.AddLeftChild(_document, SelectedNode, SelectedNode.LeftValue ?? 0);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = child.Id;
         TouchTree($"Добавлена левая вершина к #{child.Parent!.Id}.");
     }
@@ -248,6 +267,7 @@ public sealed class MainWindowViewModel : ObservableObject
             return;
 
         var child = _editorService.AddRightChild(_document, SelectedNode, SelectedNode.RightValue ?? 0);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = child.Id;
         TouchTree($"Добавлена правая вершина к #{child.Parent!.Id}.");
     }
@@ -260,6 +280,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
         var nextSelection = node.Parent?.Id;
         _editorService.DeleteSubtree(_document, node);
+        _algorithmExecutionService.InvalidatePersistentCache();
         SelectedNodeId = nextSelection ?? _document.Root?.Id;
         Results.Clear();
         TouchTree(node.Parent is null ? "Дерево очищено." : $"Удалено поддерево вершины #{node.Id}.");
@@ -285,6 +306,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
         var batch = _algorithmExecutionService.ExecuteAll(root, ActiveScopeTitle);
         Results.Clear();
+
         foreach (var item in batch)
             Results.Add(item);
 
@@ -296,6 +318,13 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         Results.Clear();
         StatusMessage = "История запусков очищена.";
+        RaiseCommandStates();
+    }
+
+    private void ClearAlgorithmCache()
+    {
+        _algorithmExecutionService.ClearPersistentCache();
+        StatusMessage = "Кеш очищен.";
         RaiseCommandStates();
     }
 
@@ -312,6 +341,7 @@ public sealed class MainWindowViewModel : ObservableObject
         var selected = SelectedNode;
         _selectedLeftDigit = selected?.LeftValue;
         _selectedRightDigit = selected?.RightValue;
+
         OnPropertyChanged(nameof(SelectedLeftDigit));
         OnPropertyChanged(nameof(SelectedRightDigit));
 
@@ -329,6 +359,7 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private void TouchTree(string message)
     {
+        _algorithmExecutionService.InvalidatePersistentCache();
         OnPropertyChanged(nameof(Root));
         OnPropertyChanged(nameof(TreeSummary));
         RefreshSelectionState();
@@ -344,6 +375,7 @@ public sealed class MainWindowViewModel : ObservableObject
         RunSelectedAlgorithmCommand.RaiseCanExecuteChanged();
         RunAllAlgorithmsCommand.RaiseCanExecuteChanged();
         ClearResultsCommand.RaiseCanExecuteChanged();
+        ClearAlgorithmCacheCommand.RaiseCanExecuteChanged();
     }
 
     private static int GetHeight(EditableTreeNode? node)
