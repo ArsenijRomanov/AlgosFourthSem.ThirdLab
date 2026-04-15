@@ -13,16 +13,16 @@ public class RecursiveDfsSolver : ISolver
 
     private static BigInteger Dfs(Node curNode, BigInteger curSum)
     {
-        if (curNode.LeftEdge == null && curNode.RightEdge == null)
+        if (curNode.Left == null && curNode.Right == null)
             return curSum;
 
         var sum = BigInteger.Zero;
 
-        if (curNode.LeftEdge != null)
-            sum += Dfs(curNode.LeftEdge.To, curSum * 10 + curNode.LeftEdge.Value);
+        if (curNode.Left != null)
+            sum += Dfs(curNode.Left, curSum * 10 + curNode.LeftValue!.Value);
 
-        if (curNode.RightEdge != null)
-            sum += Dfs(curNode.RightEdge.To, curSum * 10 + curNode.RightEdge.Value);
+        if (curNode.Right != null)
+            sum += Dfs(curNode.Right, curSum * 10 + curNode.RightValue!.Value);
 
         return sum;
     }

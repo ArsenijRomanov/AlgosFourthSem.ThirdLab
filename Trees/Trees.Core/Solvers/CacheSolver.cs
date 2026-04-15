@@ -10,40 +10,47 @@ public class CacheDfsSolver : ISolver
     public BigInteger Solve(Node root)
     {
         ArgumentNullException.ThrowIfNull(root);
+        if (_cache.TryGetValue(root, out var info))
+            return info.Sum;
 
         Dfs(root);
         var sum = _cache[root].Sum;
 
-        _cache.Clear();
         return sum;
     }
 
+    public void ClearCache()
+        => _cache.Clear();
+
     private void Dfs(Node curNode)
     {
-        if (curNode.LeftEdge == null && curNode.RightEdge == null)
+        if (_cache.ContainsKey(curNode))
+            return;
+
+        if (curNode.Left == null && curNode.Right == null)
         {
             _cache[curNode] = new CacheInfo(BigInteger.Zero, BigInteger.One);
             return;
         }
 
-        BigInteger curSum = BigInteger.Zero;
-        BigInteger curShift = BigInteger.Zero;
+        var curSum = BigInteger.Zero;
+        var curShift = BigInteger.Zero;
 
-        if (curNode.LeftEdge != null)
+        if (curNode.Left != null)
         {
-            Dfs(curNode.LeftEdge.To);
+            Dfs(curNode.Left);
 
-            var leftInfo = _cache[curNode.LeftEdge.To];
-            curSum += curNode.LeftEdge.Value * leftInfo.Shift + leftInfo.Sum;
+            var leftInfo = _cache[curNode.Left];
+            curSum += curNode.LeftValue!.Value * leftInfo.Shift + leftInfo.Sum;
             curShift += leftInfo.Shift * 10;
         }
 
-        if (curNode.RightEdge != null)
+        if (curNode.Right != null)
         {
-            Dfs(curNode.RightEdge.To);
+            Dfs(curNode.Right);
 
-            var rightInfo = _cache[curNode.RightEdge.To];
-            curSum += curNode.RightEdge.Value * rightInfo.Shift + rightInfo.Sum;
+            var rightInfo = _cache[curNode.Right];
+            curSum += curNode.RightValue!.Value * rightInfo.Shift + rightInfo.Sum;
             curShift += rightInfo.Shift * 10;
         }
 

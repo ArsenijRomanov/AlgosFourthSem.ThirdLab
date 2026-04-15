@@ -3,6 +3,7 @@ using Trees.Core.Tree;
 
 namespace Trees.Core.Solvers;
 
+
 public class BfsSolver : ISolver
 {
     public BigInteger Solve(Node root)
@@ -18,14 +19,14 @@ public class BfsSolver : ISolver
         {
             var cur = queue.Dequeue();
 
-            if (cur.node is { LeftEdge: null, RightEdge: null })
+            if (cur.node is { Left: null, Right: null })
                 sum += cur.sum;
 
-            if (cur.node.LeftEdge != null)
-                queue.Enqueue((cur.node.LeftEdge.To, cur.sum * 10 + cur.node.LeftEdge.Value));
+            if (cur.node.Left != null)
+                queue.Enqueue((cur.node.Left, cur.sum * 10 + cur.node.LeftValue!.Value));
 
-            if (cur.node.RightEdge != null)
-                queue.Enqueue((cur.node.RightEdge.To, cur.sum * 10 + cur.node.RightEdge.Value));
+            if (cur.node.Right != null)
+                queue.Enqueue((cur.node.Right, cur.sum * 10 + cur.node.RightValue!.Value));
         }
 
         return sum;
