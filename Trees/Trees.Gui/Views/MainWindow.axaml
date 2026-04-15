@@ -1,0 +1,152 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Trees.Gui.ViewModels"
+        xmlns:controls="using:Trees.Gui.Controls"
+        mc:Ignorable="d"
+        x:Class="Trees.Gui.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Width="1460"
+        Height="900"
+        MinWidth="1100"
+        MinHeight="700"
+        Title="Alta Hostein Tree">
+
+  <Grid ColumnDefinitions="400,*" RowDefinitions="Auto,*" Margin="16">
+    <Border Grid.ColumnSpan="2" Classes="card" Padding="18" Margin="0,0,0,16">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="h1" Text="Alta Hostein Tree Lab" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+          <Button Classes="secondary" Content="Импорт JSON" Click="ImportJsonClicked" />
+          <Button Classes="secondary" Content="Экспорт JSON" Click="ExportJsonClicked" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" Margin="0,0,16,0">
+      <StackPanel Spacing="14">
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Дерево" />
+            <TextBlock Foreground="#A7B5D6" Text="{Binding TreeSummary}" />
+            <WrapPanel Margin="0,4,0,0" ItemWidth="170" Orientation="Horizontal">
+              <Button Classes="primary" Content="Создать корень" Command="{Binding CreateRootCommand}" Margin="0,0,8,8" />
+              <Button Classes="secondary" Content="Очистить выбранное поддерево" Command="{Binding DeleteNodeCommand}" Margin="0,0,8,8" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Генерация" />
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+              <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Форма" />
+              <ComboBox Grid.Row="0" Grid.Column="1" SelectedItem="{Binding SelectedShape}" ItemsSource="{Binding AvailableShapes}" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Размер" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="1" Maximum="1000" Value="{Binding GeneratedSize}" />
+
+              <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Seed" />
+              <NumericUpDown Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100000" Value="{Binding Seed}" />
+
+              <Button Grid.Row="3" Grid.ColumnSpan="2" Classes="primary" Content="Сгенерировать дерево" Command="{Binding GenerateCommand}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Редактор вершины" />
+            <TextBlock Text="{Binding SelectedNodeTitle}" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+              <Button Grid.Column="0" Classes="secondary" Content="Добавить слева" Command="{Binding AddLeftCommand}" />
+              <Button Grid.Column="1" Classes="secondary" Content="Добавить справа" Command="{Binding AddRightCommand}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto">
+              <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Foreground="#A7B5D6" Text="Цифра на левом ребре" />
+                <ComboBox ItemsSource="{Binding Digits}"
+                          SelectedItem="{Binding SelectedLeftDigit}"
+                          IsEnabled="{Binding HasLeftChild}" />
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Spacing="6">
+                <TextBlock Foreground="#A7B5D6" Text="Цифра на правом ребре" />
+                <ComboBox ItemsSource="{Binding Digits}"
+                          SelectedItem="{Binding SelectedRightDigit}"
+                          IsEnabled="{Binding HasRightChild}" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Алгоритмы" />
+            <ComboBox SelectedItem="{Binding SelectedAlgorithm}" ItemsSource="{Binding AvailableAlgorithms}" />
+            <CheckBox Content="Запускать от выбранной вершины как от корня поддерева" IsChecked="{Binding RunFromSelectedNode}" />
+            <TextBlock Foreground="#A7B5D6" Text="Текущая область запуска:" />
+            <Border Background="#17233F" CornerRadius="12" Padding="10">
+              <TextBlock Text="{Binding ActiveScopeTitle}" />
+            </Border>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+              <Button Grid.Column="0" Classes="primary" Content="Запустить" Command="{Binding RunSelectedAlgorithmCommand}" />
+              <Button Grid.Column="1" Classes="secondary" Content="Сравнить все" Command="{Binding RunAllAlgorithmsCommand}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBlock Classes="h2" Text="Результаты запуска" />
+              <Button Grid.Column="1" Classes="secondary" Content="Очистить историю" Command="{Binding ClearResultsCommand}" />
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding Results}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Background="#151F36" BorderBrush="#26385F" BorderThickness="1" CornerRadius="14" Padding="12" Margin="0,0,0,8">
+                    <StackPanel Spacing="4">
+                      <TextBlock FontWeight="SemiBold" Text="{Binding AlgorithmName}" />
+                      <TextBlock Foreground="#A7B5D6" Text="{Binding ScopeName}" />
+                      <WrapPanel>
+                        <TextBlock Text="Результат: " />
+                        <TextBlock FontWeight="Bold" Text="{Binding ResultValue}" />
+                      </WrapPanel>
+                      <WrapPanel ItemSpacing="18" LineSpacing="18">
+                        <TextBlock Text="{Binding DurationText}" />
+                        <TextBlock Text="{Binding AllocatedText}" />
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Column="1" Grid.Row="1" Classes="card" Padding="10">
+      <Grid RowDefinitions="Auto,*">
+        <StackPanel Margin="4,4,4,12" Spacing="4">
+          <TextBlock Classes="h2" Text="Карта дерева" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="#0A1020" BorderBrush="#22314F" BorderThickness="1" CornerRadius="18" Padding="0">
+          <controls:TreeCanvas x:Name="TreeCanvas"
+                               Root="{Binding Root}"
+                               SelectedNodeId="{Binding SelectedNodeId, Mode=TwoWay}"
+                               Revision="{Binding TreeRevision}" />
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

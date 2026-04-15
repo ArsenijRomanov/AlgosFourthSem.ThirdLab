@@ -1,0 +1,31 @@
+{
+  "id": 1,
+  "leftValue": 1,
+  "left": {
+    "id": 2,
+    "leftValue": null,
+    "left": null,
+    "rightValue": null,
+    "right": null
+  },
+  "rightValue": 2,
+  "right": {
+    "id": 3,
+    "leftValue": 3,
+    "left": {
+      "id": 4,
+      "leftValue": null,
+      "left": null,
+      "rightValue": null,
+      "right": null
+    },
+    "rightValue": 4,
+    "right": {
+      "id": 5,
+      "leftValue": null,
+      "left": null,
+      "rightValue": null,
+      "right": null
+    }
+  }
+}
