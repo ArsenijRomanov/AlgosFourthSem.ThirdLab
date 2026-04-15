@@ -1,7 +1,7 @@
 using System.Numerics;
 using Trees.Core.Tree;
 
-namespace UnitTests.TestData;
+namespace Trees.UnitTests.TestData;
 
 public static class ManualTrees
 {

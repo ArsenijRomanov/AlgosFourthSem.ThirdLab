@@ -33,7 +33,7 @@ public static class TreeFactory
         return root;
     }
 
-    public static Node CreateCompleteTree(int h, int seed = 1)
+    public static Node CreatePerfectTree(int h, int seed = 1)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(h, 1);
         
@@ -63,6 +63,38 @@ public static class TreeFactory
             }
         }
 
+        return root;
+    }
+    
+    public static Node CreateCompleteTree(int size, int seed = 1)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
+        
+        var randomSource = new Random(seed);
+        var queue = new Queue<Node>();
+        
+        var root = new Node();
+        queue.Enqueue(root);
+        --size;
+
+        while (size > 0)
+        {
+            var curNode = queue.Dequeue();
+            var leftNode = new Node();
+
+            curNode.Left = leftNode;
+            curNode.LeftValue = GetRandomWeight(randomSource);
+            queue.Enqueue(leftNode);
+
+            if (--size <= 0) break;
+
+            var rightNode = new Node();
+            curNode.Right = rightNode;
+            curNode.RightValue = GetRandomWeight(randomSource);
+            queue.Enqueue(rightNode);
+            --size;
+        }
+        
         return root;
     }
     

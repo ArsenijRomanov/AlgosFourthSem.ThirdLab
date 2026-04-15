@@ -1,8 +1,7 @@
 using Trees.Core.Solvers;
-using UnitTests.TestData;
-using Xunit;
+using Trees.UnitTests.TestData;
 
-namespace UnitTests;
+namespace Trees.UnitTests;
 
 public class RecursiveDfsSolverTests
 {

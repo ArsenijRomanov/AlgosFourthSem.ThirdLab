@@ -123,3 +123,5 @@ ThirdLab Vault/
 *.swo
 
 *.txt
+
+BenchmarkDotNet.Artifacts/

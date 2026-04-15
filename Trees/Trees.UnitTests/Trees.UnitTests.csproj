@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <RootNamespace>UnitTests</RootNamespace>
+        <RootNamespace>Trees.UnitTests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

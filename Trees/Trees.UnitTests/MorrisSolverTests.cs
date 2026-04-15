@@ -1,15 +1,14 @@
 using Trees.Core.Solvers;
-using UnitTests.TestData;
-using Xunit;
+using Trees.UnitTests.TestData;
 
-namespace UnitTests;
+namespace Trees.UnitTests;
 
-public class CacheDfsSolverTests
+public class MorrisSolverTests
 {
     [Fact]
     public void Solve_SingleNode_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateSingleNode();
 
         var actual = solver.Solve(root);
@@ -20,7 +19,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_OneLeftEdge_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateOneLeftEdge();
 
         var actual = solver.Solve(root);
@@ -31,7 +30,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_OneRightEdge_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateOneRightEdge();
 
         var actual = solver.Solve(root);
@@ -42,7 +41,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_TwoLeaves_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateTwoLeaves();
 
         var actual = solver.Solve(root);
@@ -53,7 +52,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_MixedSmallTree_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateMixedSmallTree();
 
         var actual = solver.Solve(root);
@@ -64,7 +63,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_LeftChain_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateLeftChain();
 
         var actual = solver.Solve(root);
@@ -75,7 +74,7 @@ public class CacheDfsSolverTests
     [Fact]
     public void Solve_RightChain_ReturnsExpectedSum()
     {
-        var solver = new CacheDfsSolver();
+        var solver = new MorrisSolver();
         var root = ManualTrees.CreateRightChain();
 
         var actual = solver.Solve(root);
@@ -84,27 +83,17 @@ public class CacheDfsSolverTests
     }
 
     [Fact]
-    public void Solve_RepeatedCall_ReturnsSameResult()
+    public void Solve_DoesNotCorruptTree()
     {
-        var solver = new CacheDfsSolver();
         var root = ManualTrees.CreateMixedSmallTree();
+        var dfsSolver = new RecursiveDfsSolver();
+        var morrisSolver = new MorrisSolver();
 
-        var first = solver.Solve(root);
-        var second = solver.Solve(root);
+        var expectedBefore = dfsSolver.Solve(root);
+        var morrisResult = morrisSolver.Solve(root);
+        var expectedAfter = dfsSolver.Solve(root);
 
-        Assert.Equal(first, second);
-    }
-
-    [Fact]
-    public void ClearCache_DoesNotChangeResult()
-    {
-        var solver = new CacheDfsSolver();
-        var root = ManualTrees.CreateMixedSmallTree();
-
-        var first = solver.Solve(root);
-        solver.ClearCache();
-        var second = solver.Solve(root);
-
-        Assert.Equal(first, second);
+        Assert.Equal(expectedBefore, morrisResult);
+        Assert.Equal(expectedBefore, expectedAfter);
     }
 }
