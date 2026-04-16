@@ -125,3 +125,5 @@ ThirdLab Vault/
 *.txt
 
 BenchmarkDotNet.Artifacts/
+
+Documents/
