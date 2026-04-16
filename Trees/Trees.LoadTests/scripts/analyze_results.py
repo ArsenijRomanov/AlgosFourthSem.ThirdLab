@@ -8,11 +8,12 @@ import pandas as pd
 
 
 COLD_ALGORITHMS = ["RecursiveDfs", "Bfs", "CacheDfs", "Morris"]
-CACHE_COMPARE_ORDER = [
-    ("RecursiveDfs", "Cold"),
+
+HOT_COMPARISON_ORDER = [
     ("RecursiveDfs", "WarmBaseline"),
-    ("CacheDfs", "Cold"),
+    ("Bfs", "Cold"),
     ("CacheDfs", "WarmCache"),
+    ("Morris", "Cold"),
 ]
 
 
@@ -67,6 +68,19 @@ def make_dir(path: Path) -> Path:
     return path
 
 
+def line_label(algorithm: str, scenario: str) -> str:
+    return f"{algorithm} ({scenario})"
+
+
+def hot_comparison_frame(data: pd.DataFrame) -> pd.DataFrame:
+    return data[
+        ((data["Algorithm"] == "RecursiveDfs") & (data["Scenario"] == "WarmBaseline")) |
+        ((data["Algorithm"] == "Bfs") & (data["Scenario"] == "Cold")) |
+        ((data["Algorithm"] == "CacheDfs") & (data["Scenario"] == "WarmCache")) |
+        ((data["Algorithm"] == "Morris") & (data["Scenario"] == "Cold"))
+        ]
+
+
 def write_summary_csvs(data: pd.DataFrame, output_dir: Path) -> None:
     data.to_csv(output_dir / "all_runs.csv", index=False)
 
@@ -104,14 +118,10 @@ def write_summary_csvs(data: pd.DataFrame, output_dir: Path) -> None:
     )
     algorithm_summary.to_csv(output_dir / "algorithm_summary_merged.csv", index=False)
 
-    cache_compare = data[
-        ((data["Algorithm"] == "RecursiveDfs") & (data["Scenario"].isin(["Cold", "WarmBaseline"]))) |
-        ((data["Algorithm"] == "CacheDfs") & (data["Scenario"].isin(["Cold", "WarmCache"])))
-    ]
-
-    if not cache_compare.empty:
-        cache_compare_summary = (
-            cache_compare.groupby(["Shape", "Size", "Algorithm", "Scenario"], as_index=False)
+    hot_compare = hot_comparison_frame(data)
+    if not hot_compare.empty:
+        hot_summary = (
+            hot_compare.groupby(["Shape", "Size", "Algorithm", "Scenario"], as_index=False)
             .agg(
                 SampleCount=("ElapsedMilliseconds", "count"),
                 MeanMilliseconds=("ElapsedMilliseconds", "mean"),
@@ -122,49 +132,7 @@ def write_summary_csvs(data: pd.DataFrame, output_dir: Path) -> None:
             )
             .sort_values(["Shape", "Size", "Algorithm", "Scenario"])
         )
-        cache_compare_summary.to_csv(output_dir / "cache_comparison_summary.csv", index=False)
-
-
-def line_label(algorithm: str, scenario: str) -> str:
-    return f"{algorithm} ({scenario})"
-
-
-def ordered_algorithms_for_shape(shape_data: pd.DataFrame, include_all_scenarios: bool) -> list[tuple[str, str]]:
-    pairs = [tuple(x) for x in shape_data[["Algorithm", "Scenario"]].drop_duplicates().itertuples(index=False, name=None)]
-    if include_all_scenarios:
-        return sorted(pairs, key=lambda p: (p[1], p[0]))
-    order = [p for p in CACHE_COMPARE_ORDER if p in pairs]
-    extras = [p for p in pairs if p not in order]
-    return order + sorted(extras)
-
-
-def plot_lines_by_shape(data: pd.DataFrame, metric: str, output_dir: Path, *, scenario_filter=None, title_prefix: str, filename_prefix: str):
-    plot_dir = make_dir(output_dir / filename_prefix)
-    frame = data.copy()
-    if scenario_filter is not None:
-        frame = frame[scenario_filter(frame)]
-
-    summary = (
-        frame.groupby(["Shape", "Size", "Algorithm", "Scenario"], as_index=False)[metric]
-        .mean()
-        .sort_values(["Shape", "Algorithm", "Scenario", "Size"])
-    )
-
-    for shape, shape_frame in summary.groupby("Shape"):
-        plt.figure(figsize=(12, 6))
-        for algorithm, scenario in ordered_algorithms_for_shape(shape_frame, include_all_scenarios=True):
-            line = shape_frame[(shape_frame["Algorithm"] == algorithm) & (shape_frame["Scenario"] == scenario)].sort_values("Size")
-            if line.empty:
-                continue
-            plt.plot(line["Size"], line[metric], marker="o", label=line_label(algorithm, scenario))
-
-        plt.title(f"{title_prefix} - {shape}")
-        plt.xlabel("Size")
-        plt.ylabel(metric)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(plot_dir / f"{str(shape).lower()}_{metric.lower()}.png", dpi=170)
-        plt.close()
+        hot_summary.to_csv(output_dir / "hot_comparison_summary.csv", index=False)
 
 
 def plot_cold_lines_by_shape(data: pd.DataFrame, metric: str, output_dir: Path):
@@ -181,7 +149,9 @@ def plot_cold_lines_by_shape(data: pd.DataFrame, metric: str, output_dir: Path):
         ordered = [alg for alg in COLD_ALGORITHMS if alg in set(shape_frame["Algorithm"])]
         for algorithm in ordered:
             line = shape_frame[shape_frame["Algorithm"] == algorithm].sort_values("Size")
-            plt.plot(line["Size"], line[metric], marker="o", label=algorithm)
+            if line.empty:
+                continue
+            plt.plot(line["Size"], line[metric], marker="o", label=f"{algorithm} (Cold)")
 
         plt.title(f"Cold {metric} by size - {shape}")
         plt.xlabel("Size")
@@ -192,12 +162,9 @@ def plot_cold_lines_by_shape(data: pd.DataFrame, metric: str, output_dir: Path):
         plt.close()
 
 
-def plot_cache_compare_by_shape(data: pd.DataFrame, metric: str, output_dir: Path):
-    plot_dir = make_dir(output_dir / "cache_compare_lines")
-    frame = data[
-        ((data["Algorithm"] == "RecursiveDfs") & (data["Scenario"].isin(["Cold", "WarmBaseline"]))) |
-        ((data["Algorithm"] == "CacheDfs") & (data["Scenario"].isin(["Cold", "WarmCache"])))
-    ]
+def plot_hot_lines_by_shape(data: pd.DataFrame, metric: str, output_dir: Path):
+    plot_dir = make_dir(output_dir / "hot_lines")
+    frame = hot_comparison_frame(data)
 
     if frame.empty:
         return
@@ -210,13 +177,18 @@ def plot_cache_compare_by_shape(data: pd.DataFrame, metric: str, output_dir: Pat
 
     for shape, shape_frame in summary.groupby("Shape"):
         plt.figure(figsize=(12, 6))
-        for algorithm, scenario in ordered_algorithms_for_shape(shape_frame, include_all_scenarios=False):
-            line = shape_frame[(shape_frame["Algorithm"] == algorithm) & (shape_frame["Scenario"] == scenario)].sort_values("Size")
+        for algorithm, scenario in HOT_COMPARISON_ORDER:
+            line = shape_frame[
+                (shape_frame["Algorithm"] == algorithm) &
+                (shape_frame["Scenario"] == scenario)
+                ].sort_values("Size")
+
             if line.empty:
                 continue
+
             plt.plot(line["Size"], line[metric], marker="o", label=line_label(algorithm, scenario))
 
-        plt.title(f"Cache comparison {metric} by size - {shape}")
+        plt.title(f"Hot {metric} by size - {shape}")
         plt.xlabel("Size")
         plt.ylabel(metric)
         plt.legend()
@@ -225,18 +197,32 @@ def plot_cache_compare_by_shape(data: pd.DataFrame, metric: str, output_dir: Pat
         plt.close()
 
 
-def boxplot_for_shape_and_size(data: pd.DataFrame, metric: str, output_dir: Path, *, filter_fn, filename_prefix: str, title_prefix: str):
+def boxplot_for_shape_and_size(
+        data: pd.DataFrame,
+        metric: str,
+        output_dir: Path,
+        *,
+        filter_fn,
+        filename_prefix: str,
+        title_prefix: str,
+        order_labels: list[tuple[str, str]]
+):
     plot_dir = make_dir(output_dir / filename_prefix)
     frame = filter_fn(data.copy())
 
     for (shape, size), part in frame.groupby(["Shape", "Size"]):
-        pairs = ordered_algorithms_for_shape(part, include_all_scenarios=True)
         labels = []
         values = []
-        for algorithm, scenario in pairs:
-            series = part[(part["Algorithm"] == algorithm) & (part["Scenario"] == scenario)][metric].dropna()
+
+        for algorithm, scenario in order_labels:
+            series = part[
+                (part["Algorithm"] == algorithm) &
+                (part["Scenario"] == scenario)
+                ][metric].dropna()
+
             if series.empty:
                 continue
+
             labels.append(line_label(algorithm, scenario))
             values.append(series.values)
 
@@ -246,39 +232,6 @@ def boxplot_for_shape_and_size(data: pd.DataFrame, metric: str, output_dir: Path
         plt.figure(figsize=(13, 7))
         plt.boxplot(values, tick_labels=labels)
         plt.title(f"{title_prefix} - {shape} - size {size}")
-        plt.ylabel(metric)
-        plt.xticks(rotation=20)
-        plt.tight_layout()
-        plt.savefig(plot_dir / f"{str(shape).lower()}_size_{size}_{metric.lower()}.png", dpi=170)
-        plt.close()
-
-
-def boxplot_cache_compare_for_shape_and_size(data: pd.DataFrame, metric: str, output_dir: Path):
-    plot_dir = make_dir(output_dir / "cache_compare_boxplots")
-    frame = data[
-        ((data["Algorithm"] == "RecursiveDfs") & (data["Scenario"].isin(["Cold", "WarmBaseline"]))) |
-        ((data["Algorithm"] == "CacheDfs") & (data["Scenario"].isin(["Cold", "WarmCache"])))
-    ]
-
-    if frame.empty:
-        return
-
-    for (shape, size), part in frame.groupby(["Shape", "Size"]):
-        labels = []
-        values = []
-        for algorithm, scenario in CACHE_COMPARE_ORDER:
-            series = part[(part["Algorithm"] == algorithm) & (part["Scenario"] == scenario)][metric].dropna()
-            if series.empty:
-                continue
-            labels.append(line_label(algorithm, scenario))
-            values.append(series.values)
-
-        if not values:
-            continue
-
-        plt.figure(figsize=(12, 7))
-        plt.boxplot(values, tick_labels=labels)
-        plt.title(f"Cache comparison {metric} - {shape} - size {size}")
         plt.ylabel(metric)
         plt.xticks(rotation=20)
         plt.tight_layout()
@@ -299,8 +252,8 @@ def main() -> None:
     plot_cold_lines_by_shape(data, "ElapsedMilliseconds", output_dir)
     plot_cold_lines_by_shape(data, "AllocatedBytes", output_dir)
 
-    plot_cache_compare_by_shape(data, "ElapsedMilliseconds", output_dir)
-    plot_cache_compare_by_shape(data, "AllocatedBytes", output_dir)
+    plot_hot_lines_by_shape(data, "ElapsedMilliseconds", output_dir)
+    plot_hot_lines_by_shape(data, "AllocatedBytes", output_dir)
 
     boxplot_for_shape_and_size(
         data,
@@ -308,22 +261,43 @@ def main() -> None:
         output_dir,
         filter_fn=lambda d: d[d["Scenario"] == "Cold"],
         filename_prefix="cold_boxplots_time",
-        title_prefix="Cold elapsed milliseconds"
+        title_prefix="Cold elapsed milliseconds",
+        order_labels=[(alg, "Cold") for alg in COLD_ALGORITHMS]
     )
+
     boxplot_for_shape_and_size(
         data,
         "AllocatedBytes",
         output_dir,
         filter_fn=lambda d: d[d["Scenario"] == "Cold"],
         filename_prefix="cold_boxplots_allocated",
-        title_prefix="Cold allocated bytes"
+        title_prefix="Cold allocated bytes",
+        order_labels=[(alg, "Cold") for alg in COLD_ALGORITHMS]
     )
 
-    boxplot_cache_compare_for_shape_and_size(data, "ElapsedMilliseconds", output_dir)
-    boxplot_cache_compare_for_shape_and_size(data, "AllocatedBytes", output_dir)
+    boxplot_for_shape_and_size(
+        data,
+        "ElapsedMilliseconds",
+        output_dir,
+        filter_fn=hot_comparison_frame,
+        filename_prefix="hot_boxplots_time",
+        title_prefix="Hot elapsed milliseconds",
+        order_labels=HOT_COMPARISON_ORDER
+    )
+
+    boxplot_for_shape_and_size(
+        data,
+        "AllocatedBytes",
+        output_dir,
+        filter_fn=hot_comparison_frame,
+        filename_prefix="hot_boxplots_allocated",
+        title_prefix="Hot allocated bytes",
+        order_labels=HOT_COMPARISON_ORDER
+    )
 
     print(f"Analysis saved to: {output_dir}")
 
 
 if __name__ == "__main__":
     main()
+    
