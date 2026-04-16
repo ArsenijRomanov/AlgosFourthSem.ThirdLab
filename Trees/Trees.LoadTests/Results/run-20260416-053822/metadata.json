@@ -1,0 +1,11 @@
+{
+  "RunId": "run-20260416-053822",
+  "StartedAtUtc": "2026-04-16T05:38:22.4909Z",
+  "ProjectRoot": "/Users/arsenij/SPbU/Algo.FourthSem/ThirdLab/Trees/Trees.LoadTests",
+  "ConfigPath": "/Users/arsenij/SPbU/Algo.FourthSem/ThirdLab/Trees/Trees.LoadTests/appsettings.json",
+  "ResultsDirectory": "/Users/arsenij/SPbU/Algo.FourthSem/ThirdLab/Trees/Trees.LoadTests/Results/run-20260416-053822",
+  "FrameworkDescription": ".NET 10.0.5",
+  "OsDescription": "macOS 26.4.0",
+  "ProcessArchitecture": "Arm64",
+  "ProcessorCount": 10
+}

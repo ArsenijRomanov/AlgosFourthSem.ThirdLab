@@ -127,3 +127,4 @@ ThirdLab Vault/
 BenchmarkDotNet.Artifacts/
 
 Documents/
+*.png

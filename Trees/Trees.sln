@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trees.Benchmarks", "Trees.B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trees.Gui", "Trees.Gui\Trees.Gui.csproj", "{849574ED-40F2-4970-A0ED-A19F9EC2089F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trees.LoadTests", "Trees.LoadTests\Trees.LoadTests.csproj", "{7F082708-C425-4B30-B658-404DB242E67A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{849574ED-40F2-4970-A0ED-A19F9EC2089F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{849574ED-40F2-4970-A0ED-A19F9EC2089F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{849574ED-40F2-4970-A0ED-A19F9EC2089F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F082708-C425-4B30-B658-404DB242E67A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F082708-C425-4B30-B658-404DB242E67A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F082708-C425-4B30-B658-404DB242E67A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F082708-C425-4B30-B658-404DB242E67A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,30 @@
+{
+  "OutputDirectory": "Results",
+  "RunFolderPrefix": "run",
+  "Seed": 1,
+  "IterationsPerCase": 1000,
+  "WarmCacheIterationsPerCase": 15,
+  "WarmBaselineIterationsPerCase": 15,
+  "Sizes": [
+    10,
+    100,
+    1000
+  ],
+  "TreeShapes": [
+    "Complete",
+    "DegenerateLeft",
+    "DegenerateRight",
+    "Random"
+  ],
+  "Algorithms": [
+    "RecursiveDfs",
+    "Bfs",
+    "CacheDfs",
+    "Morris"
+  ],
+  "ForceFullGcBeforeEachRun": true,
+  "VerifyResultsConsistency": true,
+  "SaveRunRecordsJson": true,
+  "IncludeWarmCacheScenario": true,
+  "IncludeWarmBaselineScenario": true
+}
