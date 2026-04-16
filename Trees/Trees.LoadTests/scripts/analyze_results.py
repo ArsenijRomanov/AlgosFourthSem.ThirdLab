@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# python3 scripts/analyze_results.py Results
 
 COLD_ALGORITHMS = ["RecursiveDfs", "Bfs", "CacheDfs", "Morris"]
 
